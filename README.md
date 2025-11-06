@@ -5,31 +5,34 @@
 This assessment evaluates your ability to build a complete full-stack application with real-time capabilities. You will develop:
 
 1. **Backend API (Go)** - RESTful API for geofencing and vehicle tracking
-2. **WebSocket Server (Go)** - Real-time alert notification system
+2. **Real-time Alert System (Go)** - Alert notification system (WebSocket or alternative approach)
 3. **Frontend Application (React)** - Web interface to interact with the system and receive live alerts
+
+You will build a geofencing and vehicle tracking system where users can define virtual boundaries (geofences) around specific areas and track vehicles in real-time. When a vehicle enters or exits a geofenced zone—especially restricted areas—the system sends immediate alerts. Users can create geofences by drawing boundaries on a map or providing coordinates, register and track vehicles, view historical movements, configure alert rules for different vehicles and zones, and access everything through an intuitive web dashboard with live updates.
 
 ## 🎯 Objective
 
 Build a complete geofencing and vehicle tracking system that:
 - Manages geofences (virtual boundaries) and vehicle locations
 - Tracks when vehicles enter or exit geofenced areas
-- Sends real-time alerts via WebSockets
+- Sends real-time alerts when vehicles enter restricted zones
 - Provides a user-friendly web interface for system interaction
 
 ## 🛠️ Technology Stack
 
 ### Backend
 - **Language**: GoLang
-- **Real-time**: WebSocket server for live alerts
+- **Database**: Your choice (PostgreSQL with PostGIS recommended for geospatial operations)
+- **Real-time Alerts**: WebSocket or alternative approach of your choice (Server-Sent Events, polling, etc.)
 
 ### Frontend
 - **Framework**: React (you may use Next.js, Create React App, or Vite)
 - **Styling**: Your choice (Tailwind CSS, Material-UI, CSS Modules, etc.)
-- **WebSocket Client**: Native WebSocket API or libraries like socket.io-client
+- **Map Library**: Your choice (Leaflet, Mapbox, or Google Maps for interactive geofence creation)
 
 ### Infrastructure
 - **Containerization**: Docker & Docker Compose
-- **Deployment**: Your choice of platform (Render, Railway, Vercel, AWS, etc.)
+- **Deployment**: Backend (containerized), Frontend (Vercel, Netlify, etc.)
 
 ---
 
@@ -73,11 +76,18 @@ Create a new geofence with polygonal boundaries.
 }
 ```
 
+**Field Descriptions**:
+- `name` (string, required): Human-readable name for the geofence
+- `description` (string, optional): Detailed description of the geofence purpose
+- `coordinates` (array, required): Array of `[latitude, longitude]` coordinate pairs defining the polygon boundary
+- `category` (string, required): Type of geofence - one of: `delivery_zone`, `restricted_zone`, `toll_zone`, `customer_area`
+
 **Validation Rules**:
 - `coordinates`: Array of `[latitude, longitude]` pairs
 - First and last coordinates must be identical (closed polygon)
 - Minimum 4 points (3 unique + 1 closing point)
-- `category` options: `delivery_zone`, `restricted_zone`, `toll_zone`, `customer_area`
+- Latitude must be between -90 and 90
+- Longitude must be between -180 and 180
 
 **Response**:
 ```json
@@ -131,6 +141,12 @@ Register a new vehicle in the system.
 }
 ```
 
+**Field Descriptions**:
+- `vehicle_number` (string, required): Unique vehicle registration/identification number
+- `driver_name` (string, required): Name of the assigned driver
+- `vehicle_type` (string, required): Type of vehicle (e.g., truck, car, van, motorcycle)
+- `phone` (string, required): Contact phone number for the driver
+
 **Response**:
 ```json
 {
@@ -167,7 +183,7 @@ Retrieve all registered vehicles.
 ---
 
 ### 5. POST /vehicles/location
-Update vehicle location and check geofence status.
+Update vehicle location and check geofence status. **This endpoint triggers alerts when vehicles enter restricted zones.**
 
 **Request Body**:
 ```json
@@ -178,6 +194,12 @@ Update vehicle location and check geofence status.
   "timestamp": "2025-01-15T10:35:00Z"
 }
 ```
+
+**Field Descriptions**:
+- `vehicle_id` (string, required): ID of the vehicle being updated
+- `latitude` (float, required): Current latitude position (-90 to 90)
+- `longitude` (float, required): Current longitude position (-180 to 180)
+- `timestamp` (string, required): ISO 8601 timestamp of when the location was recorded
 
 **Response**:
 ```json
@@ -197,8 +219,9 @@ Update vehicle location and check geofence status.
 
 **Business Logic**:
 - Store location update in database
-- Detect entry/exit events (compare with previous location state)
-- Trigger WebSocket alerts for configured events
+- Check if vehicle is inside any geofences
+- Detect entry/exit events by comparing with previous location state
+- **Trigger real-time alerts for configured geofence events** (especially for restricted zones)
 - Return all current geofences containing the vehicle
 
 ---
@@ -230,22 +253,21 @@ Get current location and geofence status for a specific vehicle.
 ---
 
 ### 7. POST /alerts/configure
-Configure WebSocket alerts for geofence events.
+Configure alert rules for geofence events.
 
 **Request Body**:
 ```json
 {
   "geofence_id": "geo_123",
   "vehicle_id": "veh_456",
-  "event_type": "entry",
-  "websocket_url": "ws://example.com/alerts"
+  "event_type": "entry"
 }
 ```
 
-**Configuration Rules**:
-- `event_type` options: `entry`, `exit`, `both`
-- If `vehicle_id` is omitted, alert applies to all vehicles
-- `websocket_url`: WebSocket endpoint to send alerts (optional, for external integrations)
+**Field Descriptions**:
+- `geofence_id` (string, required): ID of the geofence to monitor
+- `vehicle_id` (string, optional): ID of specific vehicle to monitor. If omitted, alert applies to all vehicles
+- `event_type` (string, required): Type of event to trigger alert - one of: `entry`, `exit`, `both`
 
 **Response**:
 ```json
@@ -265,8 +287,8 @@ Configure WebSocket alerts for geofence events.
 Retrieve all configured alert rules.
 
 **Query Parameters**:
-- `geofence_id` (optional): Filter by geofence
-- `vehicle_id` (optional): Filter by vehicle
+- `geofence_id` (optional): Filter alerts by geofence
+- `vehicle_id` (optional): Filter alerts by vehicle
 
 **Response**:
 ```json
@@ -279,7 +301,6 @@ Retrieve all configured alert rules.
       "vehicle_id": "veh_456",
       "vehicle_number": "KA-01-AB-1234",
       "event_type": "entry",
-      "websocket_url": "ws://example.com/alerts",
       "status": "active",
       "created_at": "2025-01-15T09:15:00Z"
     }
@@ -325,21 +346,21 @@ Retrieve historical geofence entry/exit events.
 
 ---
 
-## 🔴 WebSocket Server Requirements
+## 🔴 Real-time Alert System
 
-### WebSocket Endpoint: `/ws/alerts`
+You need to implement a real-time alert notification system. When `POST /vehicles/location` detects that a vehicle has entered or exited a geofenced area (based on configured alert rules), the system should immediately notify connected clients.
+
+### Recommended Approach: WebSocket
+
+**WebSocket Endpoint**: `/ws/alerts`
 
 Implement a WebSocket server that:
+1. Accepts connections from frontend clients
+2. Broadcasts real-time alerts when geofence events occur
+3. Supports multiple concurrent connections
+4. Handles connection lifecycle (connect, disconnect, reconnect)
 
-1. **Accepts connections** from frontend clients
-2. **Broadcasts real-time alerts** when geofence events occur
-3. **Supports multiple concurrent connections**
-4. **Handles connection lifecycle** (connect, disconnect, reconnect)
-
-### WebSocket Message Format
-
-When a vehicle enters/exits a geofence, send this JSON to all connected clients:
-
+**WebSocket Message Format**:
 ```json
 {
   "event_id": "evt_999",
@@ -362,91 +383,93 @@ When a vehicle enters/exits a geofence, send this JSON to all connected clients:
 }
 ```
 
-### WebSocket Implementation Requirements
+**WebSocket Libraries**:
+- Gorilla WebSocket (popular choice for Go)
+- nhooyr.io/websocket
 
-- Use Gorilla WebSocket library or similar
-- Implement connection pooling/management
-- Handle graceful disconnections
-- Support message broadcasting to all connected clients
-- Optionally support filtering (e.g., alerts for specific vehicles/geofences)
+### Alternative Approaches
 
-### Integration with Location Updates
+You may use alternative real-time communication methods if you prefer
 
-When `POST /vehicles/location` detects an entry/exit event:
-1. Store the event in database
-2. Check for configured alerts matching the event
-3. **Immediately broadcast** the alert to all connected WebSocket clients
+<!-- 1. **Server-Sent Events (SSE)**: One-way server-to-client streaming
+2. **Long Polling**: Client repeatedly polls for new events
+3. **HTTP/2 Server Push**: Push notifications over HTTP/2
+4. **Message Queue + Polling**: Store alerts in queue, client polls periodically -->
+
+**Note**: WebSocket is recommended for true bi-directional real-time communication, but you're free to choose the approach that best fits your architecture.
+
+### Integration Requirements
+
+Regardless of the approach chosen:
+- When `POST /vehicles/location` detects an entry/exit event, check for matching alert configurations
+- Generate an alert with the format shown above
+- Deliver the alert to connected clients in real-time
+- Handle the alert delivery asynchronously (don't block the HTTP response)
+- Store all alerts in the database for historical records
 
 ---
 
 ## 🎨 Frontend Requirements
 
-Build a React-based web application with the following features:
+Build a React-based web application with the following capabilities:
 
-### Core Features
+### Required Features
 
 #### 1. **Geofence Management**
-- Form to create new geofences
-  - Input fields for name, description, category
-  - Coordinate input (can be textarea with JSON array or point-by-point form)
-  - Visual feedback on successful creation
-- Display list of all geofences
-- Filter geofences by category
+- Provide a way to create new geofences with name, description, category, and coordinates
+- Display list of all geofences with filtering by category
+- **Preferred approach**: Interactive map where users can see polygons that define geofence boundaries and vehicle locations.
 
 #### 2. **Vehicle Management**
-- Form to register new vehicles
-  - Fields: vehicle number, driver name, vehicle type, phone
-- Display list of all vehicles
-- View current location and status of each vehicle
+- Provide a way to register new vehicles with vehicle number, driver name, vehicle type, and phone
+- Display list of all registered vehicles
+- Show current location and geofence status for each vehicle
 
 #### 3. **Location Updates**
-- Form to update vehicle location
-  - Select vehicle from dropdown
-  - Input latitude and longitude
-  - Optional: Add map interface with click-to-select location
-- Show immediate feedback on which geofences the vehicle is in
+- Provide a way to update vehicle locations with latitude, longitude, and timestamp
+- Display which geofences the vehicle is currently inside
+- **Preferred approach**: Interactive map where users can click to set vehicle location
 
 #### 4. **Alert Configuration**
-- Form to configure alerts
-  - Select geofence
-  - Select vehicle (or "all vehicles")
-  - Choose event type (entry/exit/both)
-- Display all configured alerts
-- Option to delete/disable alerts
+- Provide a way to configure alert rules by selecting geofence, vehicle (optional), and event type
+- Display all configured alert rules
+- Ability to view and manage existing alerts
 
 #### 5. **Real-time Alert Notifications** ⭐
-- **Connect to WebSocket server** on component mount
-- **Display incoming alerts** in real-time using:
-  - Toast notifications
-  - Alert banner
-  - Dedicated alerts panel/feed
-- Show alert details: vehicle info, geofence name, event type, timestamp
-- Visual/audio notification for new alerts (optional but nice to have)
+- Connect to your backend's real-time alert system
+- Display incoming alerts as they occur with:
+  - Vehicle information
+  - Geofence name and category
+  - Event type (entry/exit)
+  - Timestamp and location
+- Recommended: Use toast notifications, alert banners, or a dedicated alerts feed
 
 #### 6. **Violation History**
 - Display historical geofence events
-- Filter by vehicle, geofence, date range
-- Pagination or infinite scroll for large datasets
-- Show event type, timestamp, location
+- Support filtering by vehicle, geofence, and date range
+- Handle pagination for large datasets
 
-#### 7. **Dashboard/Overview** (Optional but Recommended)
-- Summary statistics (total vehicles, geofences, recent alerts)
-- Recent activity feed
-- Status indicators
+### Technical Guidelines
 
-#### UI/UX Guidelines
-- Clean, intuitive interface
-- Loading states for API calls
-- User-friendly messages
-- Clear visual hierarchy
+- **Clean, intuitive interface** with clear visual feedback
+- **Loading states** for all API operations
+- **User friendly** with user-friendly UI and messages
+- **Responsive design** that works on different screen sizes
+
+### Recommended Map Integration
+
+For the best user experience, integrate a map library to:
+- Visualize geofences as polygons on a map
+- Show vehicle locations as markers
+- Allow users to input geofences and show directly on the map
+- Allow users to click on the map or throgh inputs to set vehicle locations
 
 ---
 
 ## 📦 Submission Requirements
 
 ### 1. Code Repository (GitHub)
-- Push your complete source code to GitHub
-- Include both backend and frontend code
+- Push your complete source code to GitHub (backend and frontend in separate folders or repos)
 - Add the following as collaborators (**do not make repo public**):
   - `vedantp@mapup.ai`
   - `ajayap@mapup.ai`
@@ -456,13 +479,19 @@ Build a React-based web application with the following features:
   - `parask@mapup.ai`
 
 ### 2. Docker Hub
-- Build and push Docker images
+- Build and push your backend Docker image
 
 ### 3. Deployment
-- Deploy your application to a cloud platform:
-  - Or deploy full stack together on platforms like Railway or Render
+
+**Backend**: Deploy your containerized backend to any platform that supports Docker
+
+**Frontend**: Deploy your React application to:
+- Vercel
+- Netlify
+- Cloudflare Pages
 
 ### 4. Documentation
+
 Include a `SETUP.md` file with:
 - Prerequisites and dependencies
 - Local setup instructions
@@ -471,49 +500,42 @@ Include a `SETUP.md` file with:
 - Frontend usage guide
 - Architecture overview (optional)
 
+#### Finally, please fill out the google form that you received via email to submit the assessment for review
 
+ 
 ---
 
 ## 🎯 Evaluation Criteria
 
-### Functionality 
+### Functionality
 - ✅ All API endpoints working correctly
-- ✅ WebSocket alerts broadcasting in real-time
-- ✅ Frontend properly integrated with backend
-- ✅ Real-time notifications working in UI
+- ✅ Accurate geofence detection (point-in-polygon)
+- ✅ Real-time alerts delivered properly
+- ✅ Frontend integrated with backend APIs
 - ✅ Proper handling of edge cases
 
 ### Code Quality 
-- ✅ Clean, readable, and well-organized code
+- ✅ Clean, readable, well-organized code
 - ✅ Go best practices and idioms
 - ✅ React best practices (hooks, component structure)
-- ✅ Proper error handling throughout
+- ✅ Proper error handling
 - ✅ Meaningful variable and function names
-- ✅ Code comments where necessary
+
+### User Experience 
+- ✅ Intuitive interface
+- ✅ Clear visual feedback
+- ✅ Proper error messages
+- ✅ Real-time notifications work smoothly
 
 ### Performance
 - ✅ Efficient geospatial queries
-- ✅ Proper database indexing
 - ✅ Fast location update processing
-- ✅ WebSocket connection management
-- ✅ Frontend performance (render optimization)
-
-### User Experience
-- ✅ Intuitive and user-friendly interface
-- ✅ Responsive design
-- ✅ Clear visual feedback
-- ✅ Proper error messages
-- ✅ Real-time alert notifications work smoothly
+- ✅ Proper indexing
 
 ### Dockerization & Deployment
-- ✅ Clean Dockerfiles
+- ✅ Clean Dockerfile
 - ✅ Working docker-compose setup
-- ✅ Easy to run locally
 - ✅ Successfully deployed and accessible
-
-### Database Design
-- ✅ Well-structured schema
-- ✅ Appropriate relationships and constraints
 
 ---
 
@@ -534,12 +556,14 @@ These are not required but will be considered favorably:
 
 ---
 
+## 📚 Resources
+
+- [PostGIS Documentation](https://postgis.net/documentation/)
+
+---
+
 ## ❓ Questions?
 
 If you have any questions about the assessment, please reach out to the hiring team at MapUp.
 
 **Good luck! We're excited to see what you build! 🚀**
-
-
-
-
