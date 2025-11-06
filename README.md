@@ -20,7 +20,6 @@ Build a complete geofencing and vehicle tracking system that:
 
 ### Backend
 - **Language**: GoLang
-- **Database**: PostgreSQL with PostGIS extension
 - **Real-time**: WebSocket server for live alerts
 
 ### Frontend
@@ -198,7 +197,6 @@ Update vehicle location and check geofence status.
 
 **Business Logic**:
 - Store location update in database
-- Use PostGIS to check if vehicle is inside any geofences
 - Detect entry/exit events (compare with previous location state)
 - Trigger WebSocket alerts for configured events
 - Return all current geofences containing the vehicle
@@ -438,20 +436,9 @@ Build a React-based web application with the following features:
 
 #### UI/UX Guidelines
 - Clean, intuitive interface
-- Responsive design (works on desktop and mobile)
 - Loading states for API calls
-- Error handling with user-friendly messages
-- Form validation
+- User-friendly messages
 - Clear visual hierarchy
-
-#### State Management
-- Use React hooks (useState, useEffect, useContext)
-- Or Redux/Zustand for complex state (optional)
-- Manage WebSocket connection state
-
-#### API Integration
-- Handle loading, success, and error states
-- Display API response times (optional)
 
 ---
 
@@ -464,14 +451,15 @@ Build a React-based web application with the following features:
   - `vedantp@mapup.ai`
   - `ajayap@mapup.ai`
   - `atharvd@mapup.ai`
+  - `dewanshp@mapup.ai`
+  - `karkuvelpandip@mapup.ai`
+  - `parask@mapup.ai`
 
 ### 2. Docker Hub
 - Build and push Docker images
 
 ### 3. Deployment
 - Deploy your application to a cloud platform:
-  - Backend options: Render, Railway, Fly.io, AWS EC2, Google Cloud Run
-  - Frontend options: Vercel, Netlify, Render
   - Or deploy full stack together on platforms like Railway or Render
 
 ### 4. Documentation
@@ -483,27 +471,19 @@ Include a `SETUP.md` file with:
 - Frontend usage guide
 - Architecture overview (optional)
 
-### 5. Submit via Google Form
-Provide the following:
-- GitHub repository link
-- Docker Hub links (backend and frontend)
-- Deployed API base URL
-- Deployed frontend URL
-- Brief description of your tech choices
 
 ---
 
 ## 🎯 Evaluation Criteria
 
-### Functionality (40%)
+### Functionality 
 - ✅ All API endpoints working correctly
-- ✅ Accurate geospatial calculations using PostGIS
 - ✅ WebSocket alerts broadcasting in real-time
 - ✅ Frontend properly integrated with backend
 - ✅ Real-time notifications working in UI
 - ✅ Proper handling of edge cases
 
-### Code Quality (25%)
+### Code Quality 
 - ✅ Clean, readable, and well-organized code
 - ✅ Go best practices and idioms
 - ✅ React best practices (hooks, component structure)
@@ -511,29 +491,28 @@ Provide the following:
 - ✅ Meaningful variable and function names
 - ✅ Code comments where necessary
 
-### Performance (15%)
+### Performance
 - ✅ Efficient geospatial queries
 - ✅ Proper database indexing
 - ✅ Fast location update processing
 - ✅ WebSocket connection management
 - ✅ Frontend performance (render optimization)
 
-### User Experience (10%)
+### User Experience
 - ✅ Intuitive and user-friendly interface
 - ✅ Responsive design
 - ✅ Clear visual feedback
 - ✅ Proper error messages
 - ✅ Real-time alert notifications work smoothly
 
-### Dockerization & Deployment (5%)
+### Dockerization & Deployment
 - ✅ Clean Dockerfiles
 - ✅ Working docker-compose setup
 - ✅ Easy to run locally
 - ✅ Successfully deployed and accessible
 
-### Database Design (5%)
+### Database Design
 - ✅ Well-structured schema
-- ✅ Proper use of PostGIS
 - ✅ Appropriate relationships and constraints
 
 ---
@@ -544,77 +523,6 @@ Provide the following:
 
 ---
 
-## 🧪 Testing Guidelines
-
-### Sample Test Flow
-
-1. **Setup**
-   ```bash
-   docker-compose up -d
-   ```
-
-2. **Create a geofence**
-   ```bash
-   curl -X POST http://localhost:8080/geofences \
-     -H "Content-Type: application/json" \
-     -d '{
-       "name": "Test Zone",
-       "description": "Testing area",
-       "coordinates": [[37.7749,-122.4194],[37.7849,-122.4194],[37.7849,-122.4094],[37.7749,-122.4094],[37.7749,-122.4194]],
-       "category": "delivery_zone"
-     }'
-   ```
-
-3. **Register a vehicle**
-   ```bash
-   curl -X POST http://localhost:8080/vehicles \
-     -H "Content-Type: application/json" \
-     -d '{
-       "vehicle_number": "TEST-001",
-       "driver_name": "Test Driver",
-       "vehicle_type": "car",
-       "phone": "+1234567890"
-     }'
-   ```
-
-4. **Configure alert**
-   ```bash
-   curl -X POST http://localhost:8080/alerts/configure \
-     -H "Content-Type: application/json" \
-     -d '{
-       "geofence_id": "geo_123",
-       "vehicle_id": "veh_456",
-       "event_type": "both"
-     }'
-   ```
-
-5. **Connect to WebSocket** (in frontend or using tools like websocat)
-   ```bash
-   websocat ws://localhost:8080/ws/alerts
-   ```
-
-6. **Update vehicle location**
-   ```bash
-   curl -X POST http://localhost:8080/vehicles/location \
-     -H "Content-Type: application/json" \
-     -d '{
-       "vehicle_id": "veh_456",
-       "latitude": 37.7849,
-       "longitude": -122.4194,
-       "timestamp": "2025-01-15T10:35:00Z"
-     }'
-   ```
-
-7. **Verify alert received** via WebSocket
-
-8. **Check violation history**
-   ```bash
-   curl "http://localhost:8080/violations/history?vehicle_id=veh_456"
-   ```
-
----
-
-
 ## 🌟 Bonus Points (Optional)
 
 These are not required but will be considered favorably:
@@ -623,28 +531,6 @@ These are not required but will be considered favorably:
 - Add API authentication (JWT or API keys)
 - Implement pagination for all list endpoints
 - Add unit tests for critical functions
-- Create a simple dashboard to visualize geofences and vehicle locations
-- Implement geofence buffer zones (alert when vehicle is near boundary)
-- Support for multiple polygon types (circles, rectangles, custom polygons)
-
----
-
-## 📚 Resources
-
-### Backend
-- [PostGIS Documentation](https://postgis.net/documentation/)
-- [Go PostgreSQL Driver (pgx)](https://github.com/jackc/pgx)
-- [Gorilla WebSocket](https://github.com/gorilla/websocket)
-- [Go Best Practices](https://golang.org/doc/effective_go)
-
-### Frontend
-- [React Documentation](https://react.dev/)
-- [WebSocket API (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
-- [React Hooks Guide](https://react.dev/reference/react)
-
-### DevOps
-- [Docker Documentation](https://docs.docker.com/)
-- [Docker Compose Documentation](https://docs.docker.com/compose/)
 
 ---
 
@@ -653,3 +539,7 @@ These are not required but will be considered favorably:
 If you have any questions about the assessment, please reach out to the hiring team at MapUp.
 
 **Good luck! We're excited to see what you build! 🚀**
+
+
+
+
