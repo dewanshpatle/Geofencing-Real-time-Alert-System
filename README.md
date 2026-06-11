@@ -505,6 +505,22 @@ Include a `SETUP.md` file with:
  
 ---
 
+## 🎥 Video Submission Requirements
+
+**Duration: 30-45 minutes**
+
+Your video submission is a critical part of this assessment. Structure your video roughly as follows:
+
+| Section                          | Duration  | What to Cover                                                                                                                                                                                                                                                       |
+| -------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **App Demo**                     | 10-12 min | Full working demo — create a geofence on the map, register a vehicle, update its location to trigger an entry/exit event, show the real-time alert arriving in the frontend, view violation history with filters, and demonstrate the Docker setup running locally |
+| **Implementation Deep Dive**     | 12-18 min | Walk through the codebase — project structure, architecture choices, Go backend design, geospatial point-in-polygon logic, WebSocket/SSE alert delivery, database schema, React frontend structure and real-time integration. Show actual code, not slides.         |
+| **Gaps, Improvements & Roadmap** | 10-15 min | What's incomplete and your plan to finish it with time estimates. If complete: edge cases not handled, what you'd refactor with more time, how you'd make it production-ready, and how the system could scale to thousands of vehicles and geofences.                |
+
+**Recording:** Use any screen recording tool (Loom, OBS, etc.). Upload to YouTube/Vimeo (unlisted), Loom, or Google Drive (shared with the collaborator emails listed above) and include the link in your README.
+
+---
+
 ## 🎯 Evaluation Criteria
 
 ### Functionality
