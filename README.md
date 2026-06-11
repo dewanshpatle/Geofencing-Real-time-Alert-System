@@ -550,6 +550,11 @@ Your video submission is a critical part of this assessment. Structure your vide
 - ✅ Working docker-compose setup
 - ✅ Successfully deployed and accessible
 
+### Video submission
+- ✅ Clear communication
+- ✅ Technical depth and understanding about the code
+- ✅ Self-awareness about limitations
+
 ---
 
 ## ⚠️ Code Originality
