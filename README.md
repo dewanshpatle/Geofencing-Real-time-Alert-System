@@ -500,12 +500,7 @@ Include a `SETUP.md` file with:
 - Frontend usage guide
 - Architecture overview (optional)
 
-#### Finally, please fill out the google form that you received via email to submit the assessment for review
-
- 
----
-
-## 🎥 Video Submission Requirements
+### 5. Video Submission Requirements
 
 **Duration: 30-45 minutes**
 
@@ -518,6 +513,8 @@ Your video submission is a critical part of this assessment. Structure your vide
 | **Gaps, Improvements & Roadmap** | 10-15 min | What's incomplete and your plan to finish it with time estimates. If complete: edge cases not handled, what you'd refactor with more time, how you'd make it production-ready, and how the system could scale to thousands of vehicles and geofences.                |
 
 **Recording:** Use any screen recording tool (Loom, OBS, etc.). Upload to YouTube/Vimeo (unlisted), Loom, or Google Drive (shared with the collaborator emails listed above) and include the link in your README.
+
+#### Finally, please fill out the google form that you received via email to submit the assessment for review
 
 ---
 
