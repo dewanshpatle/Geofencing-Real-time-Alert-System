@@ -473,7 +473,10 @@ For the best user experience, integrate a map library to:
 - Add the following as collaborators (**do not make repo public**):
   - `vedantp@mapup.ai`
   - `ajayap@mapup.ai`
-  - `atharvd@mapup.ai`
+  - `jyotis@mapup.ai`
+  - `tanishqs@mapup.ai`
+  - `naveenn@mapup.ai`
+  - `asijitp@mapup.ai`
   - `dewanshp@mapup.ai`
   - `karkuvelpandip@mapup.ai`
   - `parask@mapup.ai`
